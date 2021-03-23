@@ -3,11 +3,15 @@ var session;
 
 const SESSION_ID = 'dc-teams-insecure-alternative-tsjhjasd'
 
+let muted = false
+
 function joinSession() {
 
-	var myUserName = 'ignored'
+	const myUserName = 'egal'
+	console.error(myUserName)
 
 	OV = new OpenVidu();
+	OV.enableProdMode()
 	session = OV.initSession();
 
 	session.on('streamCreated', event => {
@@ -18,17 +22,21 @@ function joinSession() {
 
 		session.connect(token, { clientData: myUserName })
 			.then(() => {
-				var publisher = OV.initPublisher('video-container', {
-					audioSource: undefined,
-					videoSource: false,
-					publishAudio: true
-				});
-
-				publisher.on('videoElementCreated', function (event) {
-					event.element['muted'] = true;
-				});
-				session.publish(publisher);
-
+				var publisher = OV.initPublisher(null, {
+					videoSource: false
+				})
+				$('#mute').click(() => {
+					if(muted){
+						publisher.publishAudio(true)
+						$('#mute').text('Muten')
+						muted = false
+					} else {
+						publisher.publishAudio(false)
+						$('#mute').text('Entmuten')
+						muted = true
+					}
+				})
+				session.publish(publisher)
 			})
 			.catch(error => {
 				console.log('There was an error connecting to the session:', error.code, error.message);
@@ -63,6 +71,7 @@ function createSession(sessionId) {
 			},
 			success: response => resolve(response.id),
 			error: (error) => {
+				console.log(error)
 				if (error.status === 409) {
 					resolve(sessionId);
 				} else {
